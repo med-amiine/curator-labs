@@ -1,0 +1,106 @@
+# (Pair owner (Pair theme (Pair curatorFee (Pair deadline (Pair True (Pair { } False))))))
+{
+  storage (pair (address %owner) (pair (string %theme) (pair (nat %curatorFee) (pair (int %deadline) (pair (bool %state) (pair (big_map %show nat (pair (address %adressArtist) (pair (string %name) (pair (string %speciality) (string %desc))))) (bool %paused)))))));
+  parameter (or (or (pair %addArtist (nat %adShowId) (pair (address %adAdressArtist) (pair (string %adName) (pair (string %adSpeciality) (string %adDesc))))) (unit %pause)) (unit %unpause));
+  code { LAMBDA
+           bool
+           bool
+           { PUSH unit Unit;
+             DUP 2;
+             IF
+               { PUSH string "CONTRACT_PAUSED";
+                 FAILWITH }
+               {  };
+             PUSH bool True;
+             SWAP;
+             DROP;
+             DUG 1;
+             DROP };
+         DIG 1;
+         UNPAIR;
+         DIP { UNPAIR 7 };
+         IF_LEFT
+           { IF_LEFT
+               { UNPAIR;
+                 SWAP;
+                 UNPAIR;
+                 SWAP;
+                 UNPAIR;
+                 SWAP;
+                 UNPAIR;
+                 SWAP;
+                 DUP 11;
+                 DUP 6;
+                 MEM;
+                 IF
+                   { PUSH string "show";
+                     PUSH string "KEY_EXISTS";
+                     PAIR;
+                     FAILWITH }
+                   { DUP 11;
+                     DUP 2;
+                     DUP 4;
+                     PAIR;
+                     DUP 5;
+                     PAIR;
+                     DUP 6;
+                     PAIR;
+                     SOME;
+                     DUP 7;
+                     UPDATE;
+                     DIP { DIG 10; DROP };
+                     DUG 10 };
+                 DROP 5;
+                 PAIR 7;
+                 NIL operation;
+                 PAIR }
+               { DROP;
+                 DUP;
+                 SENDER;
+                 COMPARE;
+                 EQ;
+                 NOT;
+                 IF
+                   { PUSH string "INVALID_CALLER";
+                     FAILWITH }
+                   {  };
+                 DUP 8;
+                 DUP 8;
+                 EXEC;
+                 NOT;
+                 IF
+                   { PUSH string "pausable_r1";
+                     PUSH string "INVALID_CONDITION";
+                     PAIR;
+                     FAILWITH }
+                   {  };
+                 PUSH bool True;
+                 DIP { DIG 6; DROP };
+                 DUG 6;
+                 PAIR 7;
+                 NIL operation;
+                 PAIR } }
+           { DROP;
+             DUP;
+             SENDER;
+             COMPARE;
+             EQ;
+             NOT;
+             IF
+               { PUSH string "INVALID_CALLER";
+                 FAILWITH }
+               {  };
+             DUP 7;
+             NOT;
+             IF
+               { PUSH string "CONTRACT_NOT_PAUSED";
+                 FAILWITH }
+               {  };
+             PUSH bool False;
+             DIP { DIG 6; DROP };
+             DUG 6;
+             PAIR 7;
+             NIL operation;
+             PAIR };
+         DIP { DROP } };
+}
