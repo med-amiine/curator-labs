@@ -1,0 +1,110 @@
+archetype show(owner : address, theme : string, curatorFee : nat, deadline : duration)
+
+/* ENTRYPOINTS ------------------------------------------------------------- */
+
+// variable name: string
+// variable curator: address
+// variable theme: string
+// variable deadline: nat
+// variable curatorFee: nat
+// variable totalAmount: nat
+variable %state: bool = true
+
+record Artist {
+    adressArtist: address ;
+    name: string ;
+    speciality: string ;
+    desc: string ;
+    
+}
+
+// record ExhibitionDetail {
+//     theme : string;
+//     deadline : nat;
+//     curatorFee : nat;
+//     // counter: nat;
+// }
+
+// asset Exhibition identified by id  to big_map{
+//     id: nat;
+//     exhibition : ExhibitionDetail
+// }
+
+asset show identified by showId to big_map{
+    showId: nat;
+    artist: Artist
+}
+
+entry addArtist(adShowId: nat, adAdressArtist: address, adName: string, adSpeciality: string, adDesc: string) {
+    show.add({
+        showId = adShowId;
+        artist = { 
+            adressArtist = adAdressArtist;
+            name = adName;
+            speciality = adSpeciality;
+            desc = adDesc
+        }
+    })
+}
+
+// entry updateState(){
+//     called by owner;
+//     if deadline > data.now {
+//         %state = false;
+//     }
+// }
+    
+/* VIEWS ----------------------------------------------------------------- */
+
+// view getExhibition(){
+//     return Exhibition;
+// }
+
+// view getDeadline (){
+//     return deadline;
+// }
+
+// view getCurator(){
+//     return curator
+// }
+
+// view getCuratorfee(){
+//     return curatorFee
+// }
+
+// view getArtists() {
+//     return artists
+// }
+
+/*  PAUSABLE ----------------------------------------------------------------- */
+
+variable paused : bool = false
+
+function is_not_paused() : bool {
+  do_fail_if(paused, "CONTRACT_PAUSED");
+  return true
+}
+
+entry pause() {
+  called by owner
+  require {
+    pausable_r1: is_not_paused()
+  }
+  effect {
+    paused := true
+  }
+}
+
+entry unpause() {
+  called by owner
+  require {
+    pausable_r2: paused otherwise "CONTRACT_NOT_PAUSED"
+  }
+  effect {
+    paused := false
+  }
+}
+
+/* ERRORS ------------------------------------------------------------------ */
+
+constant CURATION_CLOSE        : string = "the curation is closed"

@@ -1,0 +1,99 @@
+archetype curator(owner : address)
+
+variable showCounter : nat = 0
+
+
+record Artist {
+    artistAddr: address;
+    name: string;
+    speciality: string;
+    desc: string ;
+}
+
+asset waitingList identified by artistAddress to big_map{
+    artistAddress: address;
+    artist: Artist
+}
+
+asset showMap identified by id to big_map{
+    id: nat;
+    exhibition : address;
+}
+
+record showValue {
+    svAdressArtist: address ;
+    svName: string ;
+    svSpeciality: string ;
+    svDesc: string ;
+}
+
+record exhibitionInit {
+    eiOwner: address;
+    theme: string;
+    curatorFee: nat;
+    deadline: int;
+    %state: bool;
+    show: big_map<nat, showValue>;
+    paused: bool;
+    // %metadata: big_map<string, bytes>;
+}
+
+entry createExhibitionContract(caTheme : string, caCuratorFee : nat, ceDeadline : int) {
+    called by owner
+    require {
+        r0: caCuratorFee > 0 otherwise CURATION_FEE
+    }
+    effect {
+        const initial_show : big_map<nat, (address * string * string * string)> = [];
+        const initial_storage = (self_address, caTheme, caCuratorFee, ceDeadline, false, initial_show, false);
+        const op_addr : (operation * address) = create_contract("./contracts/exhibition.tz", none, 0tz, initial_storage);
+
+        const addresses = [op_addr[1]];
+        match nth(addresses, 0) with
+        | some(addr) -> (
+            showMap.add({
+                id = showCounter;
+                exhibition = addr
+            }))
+        | none -> fail(ERR_CONTRACT)
+        end;
+
+        showCounter += 1
+    }
+}
+
+// artist request to join
+entry request(rartist: Artist, fshowId: nat) {
+    waitingList.add({
+        artistAddress= rartist.artistAddr;
+        artist = rartist
+    })
+}
+
+entry pendingArtist(pdShowId : nat, pdPendingArtist : address) {
+    called by owner
+    effect {
+        const showAddr = showMap[pdShowId].exhibition;
+        
+        const myArtist = waitingList[pdPendingArtist];
+
+        match waitingList[pdPendingArtist] with
+        | some(waitArtist) -> (
+            transfer 0tz to showAddr call addArtist<nat * address * string * string * string>(
+                ((pdShowId, pdPendingArtist, waitArtist.artist.name, waitArtist.artist.speciality, waitArtist.artist.desc))
+            ))
+        | none -> fail(WHAITLIST_ERR)
+        end;
+    }
+}
+
+
+/* ERRORS ------------------------------------------------------------------ */
+
+constant CURATION_FEE        : string = "the fee should be greater than zero"
+constant WHAITLIST_ERR        : string = "artist doesn't exist"
+constant ERR_CONTRACT        : string = "contract doesn't exists"
+
+    // const artist : ART
+    //     const ctr = show[address_artist].artist;
+    //     const amount 
